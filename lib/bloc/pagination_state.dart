@@ -10,10 +10,11 @@ class PaginationInitial extends PaginationState {
 
 class PaginationLoaded extends PaginationState {
   final List<AnimeModel> animeList;
+
   PaginationLoaded({required this.animeList});
 
   @override
-  List<List<AnimeModel?>> get props => [animeList];
+  List<Object?> get props => [animeList];
 }
 
 class PaginationLoading extends PaginationState {
@@ -21,6 +22,16 @@ class PaginationLoading extends PaginationState {
   final bool isFirstFetch;
 
   PaginationLoading(this.oldAnimeList, {this.isFirstFetch = false});
+
   @override
   List<Object> get props => [oldAnimeList, isFirstFetch];
+}
+
+class PaginationError extends PaginationState {
+  final String errorMessage;
+
+  PaginationError({required this.errorMessage});
+
+  @override
+  List<Object> get props => [errorMessage];
 }

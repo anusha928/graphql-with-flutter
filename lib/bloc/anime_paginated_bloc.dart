@@ -7,27 +7,35 @@ import 'package:graphql/client.dart';
 
 class AnimePaginatedCubit extends Cubit<PaginationState> {
   final GraphqlService graphqlService;
+
   AnimePaginatedCubit({required this.graphqlService})
       : super(PaginationInitial());
 
   int page = 1;
+  GraphQLClient client = getClient();
 
   fetchInfo() async {
     if (state is PaginationLoading) return;
     final currentState = state;
     var oldAnimeList = <AnimeModel>[];
-    if (currentState is PaginationLoading) {
-      oldAnimeList = currentState.oldAnimeList;
+    if (currentState is PaginationLoaded) {
+      oldAnimeList = currentState.animeList;
     }
     emit(PaginationLoading(oldAnimeList, isFirstFetch: page == 1));
-    GraphQLClient client = getClient();
-
-    await graphqlService.fetchAnimeList(client, page, 10).then((value) {
+    try {
+      final newAnimeList = await graphqlService.fetchAnimeList(client, page);
       page++;
-      final animeList = (state as PaginationLoading).oldAnimeList;
-      animeList.addAll(value);
+      final updatedAnimeList = List<AnimeModel>.from(oldAnimeList)
+        ..addAll(newAnimeList);
+      emit(PaginationLoaded(animeList: updatedAnimeList));
+    } catch (e) {
+      emit(PaginationError(errorMessage: "Failed to fetch data: $e"));
+    }
+  }
 
-      emit(PaginationLoaded(animeList: animeList));
-    });
+  refreshData() async {
+    page = 1;
+    emit(PaginationInitial()); // Reset the state
+    fetchInfo();
   }
 }

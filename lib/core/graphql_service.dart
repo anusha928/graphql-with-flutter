@@ -2,10 +2,17 @@ import 'package:anilist_graphql/core/model/anime_model.dart';
 import 'package:graphql/client.dart';
 
 String getAnimeQuery = """
-  query (\$page: Int, \$perPage: Int) {
+  query (\$page: Int, \$perPage: Int,) {
     Page(page: \$page, perPage: \$perPage) {
-      media(type: ANIME) {
+      pageInfo {
+      currentPage
+      hasNextPage
+      perPage
+    }
+      media() {
         id
+        status
+        type
         title {
           romaji
           english
@@ -21,12 +28,10 @@ String getAnimeQuery = """
 """;
 
 class GraphqlService {
-  Future<List<AnimeModel>> fetchAnimeList(GraphQLClient client, int page, int perPage) async {
+  Future<List<AnimeModel>> fetchAnimeList(
+      GraphQLClient client, int page) async {
     try {
-      final variables = {
-        'page': page,
-        'perPage': perPage,
-      };
+      var variables = {"page": page, "perPage": 10};
 
       final QueryOptions options = QueryOptions(
         document: gql(getAnimeQuery),
@@ -44,6 +49,7 @@ class GraphqlService {
       }
       List<AnimeModel> animeList =
           res.map((e) => AnimeModel.fromMap(map: e)).toList();
+
       return animeList;
     } catch (e) {
       throw Exception(e);
